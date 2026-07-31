@@ -1,0 +1,104 @@
+import dotenv from 'dotenv';
+import { GoogleGenAI, Type } from '@google/genai';
+
+dotenv.config();
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const responseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    botMessage: {
+      type: Type.STRING,
+      description: "Kullanıcıya verilecek pazarlama uzmanı yanıtı ve TEK BIR yönlendirici soru."
+    },
+    reasoning: {
+      type: Type.STRING,
+      description: "AI'ın bu adımdaki stratejik düşünce süreci ve yapılan değişikliklerin/kararların NEDENİ."
+    },
+    checklistStatus: {
+      type: Type.OBJECT,
+      description: "20 Alanlık Çetele Verisi (Bilinmeyen/Emin olunmayan alanlar KESİNLİKLE null kalmalıdır)",
+      properties: {
+        cat1_kampanya_adi: { type: Type.STRING, nullable: true },
+        cat1_kampanya_amaci: { type: Type.STRING, nullable: true },
+        cat2_butce_tipi: { type: Type.STRING, nullable: true },
+        cat2_butce_miktari: { type: Type.STRING, nullable: true },
+        cat2_butce_stratejisi: { type: Type.STRING, nullable: true },
+        cat3_reklam_seti_adi: { type: Type.STRING, nullable: true },
+        cat3_donusum_konumu: { type: Type.STRING, nullable: true },
+        cat4_konum: { type: Type.STRING, nullable: true },
+        cat4_yas_araligi: { type: Type.STRING, nullable: true },
+        cat4_cinsiyet: { type: Type.STRING, nullable: true },
+        cat4_diller: { type: Type.STRING, nullable: true },
+        cat5_ilgi_alanlari: { type: Type.ARRAY, items: { type: Type.STRING }, nullable: true },
+        cat6_yayin_alanlari: { type: Type.STRING, nullable: true },
+        cat7_reklam_adi: { type: Type.STRING, nullable: true },
+        cat7_facebook_instagram: { type: Type.STRING, nullable: true },
+        cat7_medya_formati: { type: Type.STRING, nullable: true },
+        cat8_ana_metin: { type: Type.STRING, nullable: true },
+        cat8_baslik: { type: Type.STRING, nullable: true },
+        cat8_cta_butonu: { type: Type.STRING, nullable: true },
+        cat8_hedef_url: { type: Type.STRING, nullable: true }
+      }
+    },
+    isReady: {
+      type: Type.BOOLEAN,
+      description: "20 alanın tamamı veya reklama çıkılacak kritik alanlar doldu mu?"
+    }
+  },
+  required: ["botMessage", "reasoning", "checklistStatus", "isReady"]
+};
+
+const SYSTEM_INSTRUCTION = `
+Sen kıdemli bir Dijital Pazarlama ve Meta Ads Uzmanısın.
+Amacın: Kullanıcıyla ADIM ADIM sohbet ederek Meta reklam kampanyasının 20 parametresini tespit etmek.
+
+// Kampanya Amacı kuralı:
+cat1_kampanya_amaci alanı SADECE şu 6 seçenekten biri olabilir (Meta panelindeki birebir karşılıkları): 
+'Bilinirlik', 'Trafik', 'Etkileşim', 'Potansiyel Müşteriler', 'Uygulama tanıtımı', 'Satışlar'. 
+ASLA 'Dönüşüm' kelimesini kullanma, e-ticaret/satış için 'Satışlar' veya 'Trafik' seç!
+
+ÇOK ÖNEMLİ VE KESİN KURALLAR:
+1. Kullanıcının açıkça SÖYLEMEDİĞİ veya sohbetin gidişatından KESİN OLARAK ÇIKARILAMAYAN alanları KESİNLİKLE UYDURMA! 
+2. Bilmediğin/emin olmadığın alanlar için JSON çıktısında O ALANI 'null' BIRAK!
+3. İlk mesajlarda (Örn: "Startup kurdum" veya "Selam") sadece 1-2 belirgin alanı doldur, GERİ KALAN TÜM ALANLARI 'null' YAP.
+4. Sohbet ilerledikçe kullanıcı veri verdikçe alanları 2'şer 3'er YAVAŞ YAVAŞ doldur.
+5. Kullanıcıya Her Yanıtta SADECE 1 ADET Net Soru Sor. Soru yağmuruna tutma!
+6. reasoning alanında: Bu adımda hangi alanları doldurduğunu veya güncellediğini ve bunun PAZARLAMA/STRATEJİ SEBEBİNİ 1-2 kısa cümleyle açıkla.
+
+SON AŞAMA VE DERLEME KURALI:
+- Reklam parametrelerinin çoğu dolduğunda kullanıcıyı tebrik et ve 'Kampanyayı Derle' butonuna yönlendir.
+`;
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { history, message } = req.body;
+    const contents = [
+      ...(history || []),
+      { role: 'user', parts: [{ text: message }] }
+    ];
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-lite',
+      contents: contents,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        responseMimeType: "application/json",
+        responseSchema: responseSchema,
+        temperature: 0.3,
+      }
+    });
+
+    const aiData = JSON.parse(response.text);
+    return res.status(200).json({ success: true, data: aiData });
+
+  } catch (error) {
+    console.error("AI Hatası:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}

@@ -1,7 +1,6 @@
 {
-  "name": "metai",
+  "name": "meta-ads-ai-copilot",
   "version": "1.0.0",
-  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

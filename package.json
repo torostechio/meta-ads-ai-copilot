@@ -2,11 +2,12 @@
   "name": "meta-ads-ai-copilot",
   "version": "1.0.0",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "@google/genai": "^0.1.1",
+    "@google/genai": "*",
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
   }

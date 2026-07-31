@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Meta AI Ads Architect - Executive Partner Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background: #060913; 
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+      color: #f8fafc; 
+      display: flex; 
+      height: 100vh; 
+      padding: 16px; 
+      gap: 16px; 
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* SOL PANEL: EXECUTIVE DASHBOARD (KARTLAR + LOGLAR / REHBER EKRANI) */
+    .dashboard-panel { 
+      flex: 1.4; 
+      background: rgba(15, 23, 42, 0.75); 
+      backdrop-filter: blur(20px);
+      border-radius: 20px; 
+      padding: 18px; 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      display: flex; flex-direction: column; gap: 14px; 
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    /* İlerleme Barı */
+    .progress-card { 
+      background: rgba(30, 41, 59, 0.6); 
+      padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); 
+    }
+    .progress-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; margin-bottom: 6px; letter-spacing: 0.5px; }
+    .progress-bar-bg { background: rgba(15, 23, 42, 0.9); height: 7px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); }
+    .progress-bar-fill { 
+      background: linear-gradient(90deg, #38bdf8, #818cf8, #34d399); 
+      height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+
+    /* 20 ALANLIK DYNAMIC COLOR GRID */
+    .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    
+    .field-card { 
+      background: rgba(30, 41, 59, 0.4); 
+      padding: 8px 12px; border-radius: 10px; 
+      border: 1px solid rgba(255, 255, 255, 0.06); 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .field-card.empty { opacity: 0.35; }
+    
+    .field-card.new { 
+      background: rgba(16, 185, 129, 0.15); 
+      border-color: #10b981; 
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .field-card.updated { 
+      background: rgba(245, 158, 11, 0.15); 
+      border-color: #f59e0b; 
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .field-card.filled { 
+      background: rgba(2, 132, 199, 0.12); 
+      border-color: rgba(56, 189, 248, 0.4); 
+    }
+
+    .field-badge { font-size: 9.5px; font-weight: 800; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; color: #64748b; margin-bottom: 2px; }
+    .field-value { font-size: 11.5px; font-weight: 600; color: #f8fafc; word-break: break-word; line-height: 1.2; }
+    
+    .field-card.filled .field-badge { color: #38bdf8; }
+    .field-card.new .field-badge { color: #34d399; }
+    .field-card.updated .field-badge { color: #fbbf24; }
+
+    /* ZEKA AKIŞ TERMINAL LOGU */
+    .terminal-section { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+    .terminal-title { font-size: 11px; font-weight: 700; color: #38bdf8; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+    .terminal-log { 
+      background: #090d16; 
+      padding: 10px 12px; 
+      border-radius: 10px; 
+      border: 1px solid rgba(56, 189, 248, 0.25); 
+      font-family: 'JetBrains Mono', monospace; 
+      font-size: 11px; 
+      height: 120px; 
+      overflow-y: auto;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+    }
+    .log-line { margin-bottom: 5px; display: flex; align-items: center; gap: 8px; line-height: 1.3; }
+    .log-time { color: #475569; font-weight: 700; }
+    .log-new { color: #34d399; text-shadow: 0 0 8px rgba(52, 211, 153, 0.3); }
+    .log-update { color: #fbbf24; text-shadow: 0 0 8px rgba(251, 191, 36, 0.3); }
+
+    /* SAĞ PANEL: CHATBOT EKRANI */
+    .chat-panel { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      background: rgba(15, 23, 42, 0.75); 
+      backdrop-filter: blur(20px);
+      border-radius: 20px; 
+      padding: 18px; 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    .panel-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 12px; margin-bottom: 12px; }
+    .panel-title { font-size: 15px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+    .panel-title span.badge { background: linear-gradient(135deg, #0284c7, #38bdf8); color: white; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+
+    .chat-box { flex: 1; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 12px; }
+    
+    .message { max-width: 85%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 13px; font-weight: 500; }
+    .message.user { 
+      background: linear-gradient(135deg, #2563eb, #0284c7); 
+      color: white; 
+      align-self: flex-end; 
+      border-bottom-right-radius: 4px; 
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+    }
+    .message.bot { 
+      background: rgba(30, 41, 59, 0.8); 
+      color: #e2e8f0; 
+      align-self: flex-start; 
+      border-bottom-left-radius: 4px; 
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .input-box { display: flex; gap: 10px; margin-top: 14px; }
+    input { 
+      flex: 1; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); 
+      background: rgba(15, 23, 42, 0.9); color: white; font-size: 13.5px; font-family: inherit; outline: none;
+      transition: all 0.2s ease;
+    }
+    input:focus { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+    
+    button { 
+      padding: 0 24px; 
+      background: linear-gradient(135deg, #10b981, #059669); 
+      color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 13.5px; cursor: pointer; 
+      transition: all 0.2s ease; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+
+    /* %80 BİLDİRİM MODAL KUTUSU */
+    .modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(6, 9, 19, 0.85); backdrop-filter: blur(12px);
+      display: none; justify-content: center; align-items: center; z-index: 999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-card {
+      background: #1e293b; border: 1px solid #38bdf8; border-radius: 20px;
+      padding: 28px; width: 440px; text-align: center;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+      display: flex; flex-direction: column; gap: 18px;
+    }
+
+    .modal-title { font-size: 20px; font-weight: 800; color: #38bdf8; }
+    .modal-desc { font-size: 13.5px; color: #94a3b8; line-height: 1.5; }
+    .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-action {
+      padding: 12px; border-radius: 10px; font-weight: 700; font-size: 13.5px;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+    .btn-secondary { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; }
+    .btn-tertiary { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .btn-action:hover { transform: translateY(-2px); }
+
+    /* ADIM ADIM REHBER PANELİ (SIFRDAN KULLANICI İÇİN) */
+    .rehber-container {
+      display: none; flex-direction: column; gap: 14px; animation: fadeIn 0.4s ease;
+    }
+    .rehber-step {
+      background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .step-header { font-size: 13px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
+    .step-desc { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+    
+    .copy-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #090d16; padding: 8px 12px; border-radius: 8px; font-size: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .btn-copy {
+      background: #0284c7; color: white; border: none; padding: 4px 10px;
+      border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .btn-copy:hover { background: #38bdf8; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- SOL PANEL: EXECUTIVE DASHBOARD / REHBER EKRANI -->
+  <div class="dashboard-panel" id="leftPanel">
+    
+    <!-- İlerleme Barı -->
+    <div class="progress-card">
+      <div class="progress-header">
+        <span style="color: #94a3b8;">REKLAM MİMARİSİ DOLULUK ORANI</span>
+        <span id="progressText" style="color: #38bdf8;">0 / 20 ALAN (%0)</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+    </div>
+
+    <!-- STANDART 20 ALAN GRIDI (İLK BASTA BU GÖZÜKÜR) -->
+    <div id="standardDashboard" style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="grid-container" id="gridContainer"></div>
+      <div class="terminal-section">
+        <div class="terminal-title">🧠 AI KARAR & DEĞİŞİKLİK AKIŞI</div>
+        <div class="terminal-log" id="terminalLog">
+          <div class="log-line"><span class="log-time">[SYSTEM]</span> <span style="color: #94a3b8;">Strateji motoru aktif. Sohbet verileri bekleniyor...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KAMPANYAYI DERLE DEYİNCE AÇILAN KÖR BİLE YAPABİLİR REHBER PANELİ -->
+    <div class="rehber-container" id="rehberPanel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <h3 style="color: #10b981; font-size: 15px;">🚀 Meta Ads Adım Adım Kurulum Kılavuzu</h3>
+        <button onclick="toggleView('dashboard')" style="background: none; border: 1px solid #475569; color: #94a3b8; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">📊 Çeteleye Dön</button>
+      </div>
+
+      <!-- ADIM 1 -->
+      <div class="rehber-step">
+        <div class="step-header">1. ADIM: Meta Ads Manager'ı Aç ve Kampanyayı Başlat</div>
+        <div class="step-desc">Facebook Ads Manager tarayıcında açıkken sol üstteki yeşil <b>"+ Oluştur"</b> butonuna bas. Açılan pencerede kampanyanın amacını seç:</div>
+        <div class="copy-item">
+          <span>Kampanya Amacı: <b id="guide_amaci" style="color:#10b981">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_amaci')">📋 Kopyala</button>
+        </div>
+        <div class="copy-item">
+          <span>Kampanya Adı: <b id="guide_kampanya_adi" style="color:#38bdf8">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_kampanya_adi')">📋 Kopyala</button>
+        </div>
+      </div>
+
+      <!-- ADIM 2 -->
+      <div class="rehber-step">
+        <div class="step-header">2. ADIM: Hedef Kitle ve Bütçeyi Yapıştır</div>
+        <div class="step-desc">İkinci ekranda (Reklam Seti) bütçeyi ve kime reklam gösterileceğini doldur:</div>
+        <div class="copy-item">
+          <span>Günlük Bütçe: <b id="guide_butce" style="color:#fbbf24">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_butce')">📋 Kopyala</button>
+        </div>
+        <div class="copy-item">
+          <span>Hedef Konum: <b id="guide_konum" style="color:#38bdf8">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_konum')">📋 Kopyala</button>
+        </div>
+        <div class="copy-item">
+          <span>İlgi Alanları: <b id="guide_ilgi" style="color:#38bdf8">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_ilgi')">📋 Kopyala</button>
+        </div>
+      </div>
+
+      <!-- ADIM 3 -->
+      <div class="rehber-step">
+        <div class="step-header">3. ADIM: Reklam Metni ve Görseli Ekle</div>
+        <div class="step-desc">Son ekranda AI'ın senin için yazdığı satış metnini yapıştır ve yayına al:</div>
+        <div class="copy-item">
+          <span>Reklam Başlığı: <b id="guide_baslik" style="color:#38bdf8">-</b></span>
+          <button class="btn-copy" onclick="copyText('guide_baslik')">📋 Kopyala</button>
+        </div>
+        <div class="copy-item" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+          <span>Ana Metin (Primary Text):</span>
+          <div id="guide_metin" style="color:#cbd5e1; font-style: italic; font-size: 11px;">-</div>
+          <button class="btn-copy" style="align-self: flex-end;" onclick="copyText('guide_metin')">📋 Metni Kopyala</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SAĞ PANEL: CHATBOT EKRANI -->
+  <div class="chat-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>💬 Meta Ads AI Copilot</span>
+      </div>
+      <span class="badge">Gemini 3.1 Flash Lite</span>
+    </div>
+    <div class="chat-box" id="chatBox">
+      <div class="message bot">
+        Selam! Ben Meta Ads mimarınız. Reklam kampanyanızı kurgulamak için hazırım. İşletmenizden ve hedeflerinizden bahsetmeye başlayabilirsiniz!
+      </div>
+    </div>
+    <div class="input-box">
+      <input type="text" id="userInput" placeholder="Mesajınızı yazın... (Örn: Kadıköy'de kahveciyim, bütçe 500 TL)" onkeypress="if(event.key === 'Enter') sendMessage()">
+      <button onclick="sendMessage()">Gönder</button>
+    </div>
+  </div>
+
+  <!-- %80 BİLDİRİM MODAL POP-UP -->
+  <div class="modal-overlay" id="thresholdModal">
+    <div class="modal-card">
+      <div style="font-size: 32px;">🎯🚀</div>
+      <div class="modal-title">Kampanyanız Derlenmeye Hazır!</div>
+      <div class="modal-desc">20 parametrenin <b>%80'inden fazlası</b> yapay zeka tarafından başarıyla tamamlandı. Şimdi ne yapmak istersiniz?</div>
+      <div class="modal-btns">
+        <button class="btn-action btn-primary" onclick="startRehber()">🚀 Kampanyayı Derle & Kuruluma Başla</button>
+        <button class="btn-action btn-secondary" onclick="focusChatInput()">💬 AI'a Soru Sor</button>
+        <button class="btn-action btn-tertiary" onclick="closeModal()">🔄 Sohbet Etmeye Devam Et</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fieldsConfig = [
+      { key: 'cat1_kampanya_adi', label: '01. Kampanya Adı' },
+      { key: 'cat1_kampanya_amaci', label: '02. Kampanya Amacı' },
+      { key: 'cat2_butce_tipi', label: '03. Bütçe Tipi' },
+      { key: 'cat2_butce_miktari', label: '04. Bütçe Miktarı' },
+      { key: 'cat2_butce_stratejisi', label: '05. Bütçe Stratejisi' },
+      { key: 'cat3_reklam_seti_adi', label: '06. Reklam Seti Adı' },
+      { key: 'cat3_donusum_konumu', label: '07. Dönüşüm Konumu' },
+      { key: 'cat4_konum', label: '08. Hedef Konum' },
+      { key: 'cat4_yas_araligi', label: '09. Yaş Aralığı' },
+      { key: 'cat4_cinsiyet', label: '10. Cinsiyet' },
+      { key: 'cat4_diller', label: '11. Diller' },
+      { key: 'cat5_ilgi_alanlari', label: '12. İlgi Alanları' },
+      { key: 'cat6_yayin_alanlari', label: '13. Yayın Alanları' },
+      { key: 'cat7_reklam_adi', label: '14. Reklam Adı' },
+      { key: 'cat7_facebook_instagram', label: '15. Sayfa Kimliği' },
+      { key: 'cat7_medya_formati', label: '16. Medya Formatı' },
+      { key: 'cat8_ana_metin', label: '17. Primary Text (AI Metin)' },
+      { key: 'cat8_baslik', label: '18. Headline (Başlık)' },
+      { key: 'cat8_cta_butonu', label: '19. CTA Butonu' },
+      { key: 'cat8_hedef_url', label: '20. Hedef URL' }
+    ];
+
+    let previousState = {};
+    let currentState = {};
+    let chatHistory = [];
+    let messageTurn = 0;
+    let modalTriggered = false;
+
+    function initGrid() {
+      const container = document.getElementById('gridContainer');
+      container.innerHTML = '';
+      fieldsConfig.forEach(f => {
+        container.innerHTML += `
+          <div class="field-card empty" id="card-${f.key}">
+            <div class="field-badge">${f.label}</div>
+            <div class="field-value" id="val-${f.key}">-</div>
+          </div>
+        `;
+      });
+    }
+
+    initGrid();
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      messageTurn++;
+      const chatBox = document.getElementById('chatBox');
+      
+      chatBox.innerHTML += `<div class="message user">${message}</div>`;
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message bot';
+      loadingDiv.innerHTML = '<span style="color:#38bdf8">⚡ AI Stratejisi İşleniyor...</span>';
+      chatBox.appendChild(loadingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ history: chatHistory, message: message })
+        });
+
+        const result = await response.json();
+        chatBox.removeChild(loadingDiv);
+
+        if (result.success) {
+          const aiData = result.data;
+          chatBox.innerHTML += `<div class="message bot">${aiData.botMessage}</div>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+
+          chatHistory.push({ role: 'user', parts: [{ text: message }] });
+          chatHistory.push({ role: 'model', parts: [{ text: JSON.stringify(aiData) }] });
+
+          // AI STRATEJİ & DÜŞÜNCE MANTIĞINI LOGA BASAR
+          if (aiData.reasoning) {
+            addLog(`🧠 [STRATEJİ MANTIĞI] ${aiData.reasoning}`, 'log-new');
+          }
+
+          updateDashboard(aiData.checklistStatus);
+        } else {
+          chatBox.innerHTML += `<div class="message bot" style="color:#ef4444">Hata: ${result.error}</div>`;
+        }
+      } catch (err) {
+        chatBox.removeChild(loadingDiv);
+        chatBox.innerHTML += `<div class="message bot" style="color:#ef4444">Bağlantı Hatası!</div>`;
+      }
+    }
+
+    function updateDashboard(newState) {
+      let filledCount = 0;
+      let newCount = 0;
+      currentState = newState;
+
+      fieldsConfig.forEach(f => {
+        const card = document.getElementById(`card-${f.key}`);
+        const valElem = document.getElementById(`val-${f.key}`);
+        
+        let val = newState[f.key];
+        if (Array.isArray(val)) val = val.join(', ');
+
+        const oldVal = previousState[f.key];
+        card.className = 'field-card';
+
+        if (val && val !== 'null' && val !== '') {
+          filledCount++;
+          valElem.innerText = val;
+
+          if (!oldVal || oldVal === 'null' || oldVal === '') {
+            card.classList.add('new');
+            newCount++;
+          } else if (oldVal !== val) {
+            card.classList.add('updated');
+            let displayVal = val.length > 25 ? val.substring(0, 25) + '...' : val;
+            let fieldName = f.label.substring(4); 
+            addLog(`⚡ [Mesaj ${messageTurn}] ${fieldName} Değişti ➔ "${displayVal}"`, 'log-update');
+          } else {
+            card.classList.add('filled');
+          }
+        } else {
+          card.classList.add('empty');
+          valElem.innerText = '-';
+        }
+      });
+
+      if (newCount > 0) {
+        addLog(`🟢 [Mesaj ${messageTurn}] +${newCount} Yeni Alan AI Tarafından Dolduruldu.`, 'log-new');
+      }
+
+      const percent = Math.round((filledCount / 20) * 100);
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').innerText = `${filledCount} / 20 ALAN (%${percent})`;
+
+      // %80 DOLULUK BİLDİRİMİ TETİKLEME
+      if (percent >= 80 && !modalTriggered) {
+        modalTriggered = true;
+        setTimeout(() => {
+          document.getElementById('thresholdModal').style.display = 'flex';
+        }, 800);
+      }
+
+      previousState = { ...newState };
+    }
+
+    function addLog(text, className) {
+      const logBox = document.getElementById('terminalLog');
+      const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const item = document.createElement('div');
+      item.className = 'log-line';
+      item.innerHTML = `<span class="log-time">[${time}]</span> <span class="${className}">${text}</span>`;
+      logBox.insertBefore(item, logBox.firstChild);
+    }
+
+    /* POP-UP MODAL AKSİYONLARI */
+    function closeModal() {
+      document.getElementById('thresholdModal').style.display = 'none';
+    }
+
+    function focusChatInput() {
+      closeModal();
+      document.getElementById('userInput').focus();
+    }
+
+    function startRehber() {
+      closeModal();
+      toggleView('rehber');
+
+      // Rehber alanlarına verileri doldur
+      document.getElementById('guide_amaci').innerText = currentState.cat1_kampanya_amaci || 'Satışlar';
+      document.getElementById('guide_kampanya_adi').innerText = currentState.cat1_kampanya_adi || 'Nova Coffee - Cold Brew Satış';
+      document.getElementById('guide_butce').innerText = (currentState.cat2_butce_miktari || '400') + ' TL/Gün';
+      document.getElementById('guide_konum').innerText = currentState.cat4_konum || 'İzmir, Karşıyaka';
+      
+      let ilgi = currentState.cat5_ilgi_alanlari;
+      document.getElementById('guide_ilgi').innerText = Array.isArray(ilgi) ? ilgi.join(', ') : (ilgi || 'Kahve, Espresso, Cold Brew');
+      
+      document.getElementById('guide_baslik').innerText = currentState.cat8_baslik || 'Nova Coffee: Cold Brew Lezzeti Kapında!';
+      document.getElementById('guide_metin').innerText = currentState.cat8_ana_metin || 'Nova Coffee\'nin özel cold brew çekirdekleriyle evde barista deneyimine hazır mısın? Şimdi keşfet!';
+    }
+
+    function toggleView(view) {
+      if (view === 'rehber') {
+        document.getElementById('standardDashboard').style.display = 'none';
+        document.getElementById('rehberPanel').style.display = 'flex';
+      } else {
+        document.getElementById('standardDashboard').style.display = 'flex';
+        document.getElementById('rehberPanel').style.display = 'none';
+      }
+    }
+
+    function copyText(elemId) {
+      const text = document.getElementById(elemId).innerText;
+      navigator.clipboard.writeText(text);
+      alert('Kopyalandı: ' + text);
+    }
+  </script>
+</body>
+</html>

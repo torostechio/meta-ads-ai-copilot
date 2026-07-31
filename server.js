@@ -8,7 +8,19 @@ const app = express();
 app.use(express.json());
 // HTML ve Statik dosyaları sunmak için
 app.use(express.static('public'));
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Statik dosyaları sun
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ana sayfaya gelinince index.html dosyasını gönder
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 // Google Gen AI İstemcisini Başlat
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
